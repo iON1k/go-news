@@ -34,9 +34,9 @@ func (s *Store) Posts(n int) ([]storage.Post, error) {
 }
 
 // Добавление новой публикации
-func (s *Store) AddPost(p storage.Post) error {
+func (s *Store) AddPosts(posts []storage.Post) error {
 	s.mut.Lock()
 	defer s.mut.Unlock()
-	s.posts = append(s.posts, p)
+	s.posts = append(s.posts, posts...)
 	return nil
 }

@@ -74,18 +74,32 @@ func (s *Store) Posts(n int) ([]storage.Post, error) {
 }
 
 // Добавление новой публикации
-func (s *Store) AddPost(p storage.Post) error {
-	_, err := s.db.Exec(
-		context.Background(),
-		`
-		INSERT INTO posts (title, content, pub_time, link) 
-		VALUES ($1, $2, $3, $4);
-		`,
-		p.Title,
-		p.Content,
-		p.PubTime,
-		p.Link,
-	)
+func (s *Store) AddPosts(posts []storage.Post) error {
+	ctx := context.Background()
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
 
-	return err
+	for _, p := range posts {
+		_, err := tx.Exec(
+			context.Background(),
+			`
+			INSERT INTO posts (title, content, pub_time, link) 
+			VALUES ($1, $2, $3, $4)
+			ON CONFLICT DO NOTHING;
+			`,
+			p.Title,
+			p.Content,
+			p.PubTime,
+			p.Link,
+		)
+
+		if err != nil {
+			tx.Rollback(ctx)
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }

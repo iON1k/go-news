@@ -12,5 +12,5 @@ type Post struct {
 // Хранилище данных
 type Store interface {
 	Posts(n int) ([]Post, error) // Получение последних n публикаций
-	AddPost(p Post) error        // Добавление новой публикации
+	AddPosts(posts []Post) error // Добавление новых публикаций
 }
