@@ -50,7 +50,7 @@ func (s *Store) NewsList(titleFilter string, from int64, to int64, offset int, c
 		`
 		SELECT news.id AS id, title, pub_time, link
 		FROM news
-		WHERE pub_time >= $1 AND pub_time <= $2 AND LOWER(title) LIKE LOWER($3)
+		WHERE pub_time >= $1 AND pub_time <= $2 AND title ILIKE $3
 		ORDER BY pub_time DESC
 		OFFSET $4
 		LIMIT $5;
