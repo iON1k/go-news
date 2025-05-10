@@ -1,12 +1,12 @@
 package main
 
 import (
-	"GoNews/pkg/api"
-	"GoNews/pkg/rss"
-	"GoNews/pkg/storage/postgres"
 	"encoding/json"
 	"log"
 	"net/http"
+	"news/pkg/api"
+	"news/pkg/rss"
+	"news/pkg/storage/postgres"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -54,12 +54,7 @@ func main() {
 	fetcher := rss.NewFetcher(rss_loaders, store)
 	fetcher.Start(config.SyncPeriod)
 
-	host := os.Getenv("HOST")
-	if host == "" {
-		log.Fatal("No environment for HOST")
-	}
-
 	// Запускаем API
 	api := api.New(store)
-	http.ListenAndServe(host, api.Router())
+	http.ListenAndServe(":80", api.Router())
 }

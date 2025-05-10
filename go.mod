@@ -1,4 +1,4 @@
-module GoNews
+module news
 
 go 1.21
 

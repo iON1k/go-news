@@ -1,9 +1,9 @@
 package api
 
 import (
-	"GoNews/pkg/storage"
 	"encoding/json"
 	"net/http"
+	"news/pkg/storage"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -44,19 +44,16 @@ func (api *API) newsList(w http.ResponseWriter, r *http.Request) {
 	toStr := r.URL.Query().Get("to")
 	to, _ := strconv.ParseInt(toStr, 10, 64)
 
-	offsetStr := r.URL.Query().Get("offset")
-	offset, _ := strconv.Atoi(offsetStr)
+	pageStr := r.URL.Query().Get("page")
+	page, _ := strconv.Atoi(pageStr)
 
-	countStr := r.URL.Query().Get("count")
-	count, _ := strconv.Atoi(countStr)
-
-	news, err := api.store.NewsList(title, from, to, offset, count)
+	new_page, err := api.store.NewsPage(title, from, to, page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(news)
+	json.NewEncoder(w).Encode(new_page)
 }
 
 func (api *API) newsDetails(w http.ResponseWriter, r *http.Request) {

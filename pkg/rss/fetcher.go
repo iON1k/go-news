@@ -1,10 +1,10 @@
 package rss
 
 import (
-	"GoNews/pkg/models"
-	"GoNews/pkg/storage"
 	"encoding/xml"
 	"log"
+	"news/pkg/models"
+	"news/pkg/storage"
 	"time"
 
 	strip "github.com/grokify/html-strip-tags-go"

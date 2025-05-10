@@ -1,9 +1,9 @@
 package memdb
 
 import (
-	"GoNews/pkg/models"
 	"errors"
-	"strings"
+	"math"
+	"news/pkg/models"
 	"sync"
 )
 
@@ -18,35 +18,22 @@ func New() *Store {
 	return &Store{make([]models.FullNews, 0), sync.Mutex{}}
 }
 
-// Получение публикаций по фильтру
-func (s *Store) NewsList(titleFilter string, from int64, to int64, offset int, count int) ([]models.ShortNews, error) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	result := []models.ShortNews{}
-	curOffset := 0
-	for _, news := range s.news {
-		if news.PubTime < from || to != 0 && news.PubTime > to {
-			continue
-		}
-
-		if !strings.Contains(strings.ToLower(news.Title), strings.ToLower(titleFilter)) {
-			continue
-		}
-
-		if curOffset >= offset {
-			shortNews := models.ShortNews{ID: news.ID, Title: news.Title, PubTime: news.PubTime, Link: news.Link}
-			result = append(result, shortNews)
-
-			if count != 0 && len(result) == count {
-				return result, nil
-			}
-		}
-
-		curOffset++
+// Получение страницы с публикациями
+func (s *Store) NewsPage(titleFilter string, from int64, to int64, page int) (models.NewsPage, error) {
+	paging := models.Paging{Index: page, Count: 1, Size: math.MaxInt}
+	if page != 0 {
+		return models.NewsPage{News: []models.ShortNews{}, Paging: paging}, nil
 	}
 
-	return result, nil
+	s.mut.Lock()
+	defer s.mut.Unlock()
+	s_news := []models.ShortNews{}
+	for _, news := range s.news {
+		sn := models.ShortNews{ID: news.ID, Title: news.Title, PubTime: news.PubTime, Link: news.Link}
+		s_news = append(s_news, sn)
+	}
+
+	return models.NewsPage{News: s_news, Paging: paging}, nil
 }
 
 // Получение деталей публикации

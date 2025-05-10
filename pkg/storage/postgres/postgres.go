@@ -1,16 +1,19 @@
 package postgres
 
 import (
-	"GoNews/pkg/models"
 	"context"
 	"math"
+	"news/pkg/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const NEWS_PAGE_SIZE = 10
+
 // Хранилище данных.
 type Store struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	p_size int
 }
 
 // Конструктор хранилища с URL для коннекта к БД
@@ -21,31 +24,44 @@ func New(conn string) (*Store, error) {
 		return nil, err
 	}
 
-	return NewFromPGX(db), nil
+	return NewFromPGX(db, NEWS_PAGE_SIZE), nil
 }
 
 // Конструктор хранилища с готовым коннектом к БД
-func NewFromPGX(db *pgxpool.Pool) *Store {
-	return &Store{db}
+func NewFromPGX(db *pgxpool.Pool, p_size int) *Store {
+	return &Store{db, p_size}
 }
 
 func (s *Store) Close() {
 	s.db.Close()
 }
 
-// Получение публикаций по фильтру
-func (s *Store) NewsList(titleFilter string, from int64, to int64, offset int, count int) ([]models.ShortNews, error) {
-	if count <= 0 {
-		count = 1000
-	}
-
+// Получение страницы с публикациями
+func (s *Store) NewsPage(titleFilter string, from int64, to int64, page int) (models.NewsPage, error) {
 	if to <= 0 {
 		to = math.MaxInt64
 	}
 
 	titleFilter = "%" + titleFilter + "%"
 
-	rows, err := s.db.Query(
+	var allRowsCount int
+	err := s.db.QueryRow(
+		context.Background(),
+		`
+		SELECT COUNT(*)
+		FROM news
+		WHERE pub_time >= $1 AND pub_time <= $2 AND title ILIKE $3;
+		`,
+		from,
+		to,
+		titleFilter,
+	).Scan(&allRowsCount)
+
+	if err != nil {
+		return models.NewsPage{}, err
+	}
+
+	pageRows, err := s.db.Query(
 		context.Background(),
 		`
 		SELECT news.id AS id, title, pub_time, link
@@ -58,35 +74,45 @@ func (s *Store) NewsList(titleFilter string, from int64, to int64, offset int, c
 		from,
 		to,
 		titleFilter,
-		offset,
-		count,
+		page*s.p_size,
+		s.p_size,
 	)
 
 	if err != nil {
-		return nil, err
+		return models.NewsPage{}, err
 	}
 
-	result := []models.ShortNews{}
-	for rows.Next() {
-		var p models.ShortNews
-		err := rows.Scan(
-			&p.ID,
-			&p.Title,
-			&p.PubTime,
-			&p.Link,
+	page_news := []models.ShortNews{}
+	for pageRows.Next() {
+		var n models.ShortNews
+		err := pageRows.Scan(
+			&n.ID,
+			&n.Title,
+			&n.PubTime,
+			&n.Link,
 		)
 
 		if err != nil {
-			return nil, err
+			return models.NewsPage{}, err
 		}
-		result = append(result, p)
+		page_news = append(page_news, n)
 	}
 
-	return result, rows.Err()
+	pagesCount := allRowsCount / s.p_size
+	if allRowsCount%s.p_size != 0 {
+		pagesCount++
+	}
+
+	n_page := models.NewsPage{
+		News:   page_news,
+		Paging: models.Paging{Index: page, Count: pagesCount, Size: s.p_size},
+	}
+
+	return n_page, pageRows.Err()
 }
 
 func (s *Store) NewsDetails(id int) (models.FullNews, error) {
-	var news models.FullNews
+	var n models.FullNews
 
 	err := s.db.QueryRow(
 		context.Background(),
@@ -97,14 +123,14 @@ func (s *Store) NewsDetails(id int) (models.FullNews, error) {
 		`,
 		id,
 	).Scan(
-		&news.ID,
-		&news.Title,
-		&news.Content,
-		&news.PubTime,
-		&news.Link,
+		&n.ID,
+		&n.Title,
+		&n.Content,
+		&n.PubTime,
+		&n.Link,
 	)
 
-	return news, err
+	return n, err
 }
 
 // Добавление новых публикаций

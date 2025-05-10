@@ -1,7 +1,7 @@
 package rss
 
 import (
-	"GoNews/pkg/storage/memdb"
+	"news/pkg/storage/memdb"
 	"testing"
 	"time"
 )
@@ -27,9 +27,9 @@ func TestFetching(t *testing.T) {
 	ctx.f.Start(1)
 
 	time.Sleep(time.Second)
-	posts, _ := ctx.s.NewsList("", 0, 0, 0, 0)
+	page, _ := ctx.s.NewsPage("", 0, 0, 0)
 
-	if len(posts) != 6 {
+	if len(page.News) != 6 {
 		t.Fatal("Wrong fetched posts count")
 	}
 }
