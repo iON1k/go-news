@@ -12,6 +12,7 @@ import (
 
 type TestContext struct {
 	api *API
+	db  *memdb.Store
 }
 
 func setup(_ *testing.T) TestContext {
@@ -23,7 +24,7 @@ func setup(_ *testing.T) TestContext {
 	})
 	api := New(db)
 
-	return TestContext{api}
+	return TestContext{api, db}
 }
 
 func TestNewsList(t *testing.T) {
