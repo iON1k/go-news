@@ -34,7 +34,7 @@ func TestNewsList(t *testing.T) {
 	resp := httptest.NewRecorder()
 	ctx.api.router.ServeHTTP(resp, req)
 
-	if !(resp.Code == http.StatusOK) {
+	if resp.Code != http.StatusOK {
 		t.Fatal("Wrong status code")
 	}
 
@@ -62,7 +62,7 @@ func TestNewsDetails(t *testing.T) {
 	resp := httptest.NewRecorder()
 	ctx.api.router.ServeHTTP(resp, req)
 
-	if !(resp.Code == http.StatusOK) {
+	if resp.Code != http.StatusOK {
 		t.Fatal("Wrong status code")
 	}
 
