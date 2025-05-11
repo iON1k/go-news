@@ -46,8 +46,8 @@ func (api *API) endpoints() {
 	api.router.Use(requestIdValidator)
 	api.router.Use(requestLogger)
 
-	api.router.HandleFunc("/news", api.newsList).Methods(http.MethodGet)
-	api.router.HandleFunc("/news/{id}", api.newsDetails).Methods(http.MethodGet)
+	api.router.Methods(http.MethodGet).Path("/news").HandlerFunc(api.newsList)
+	api.router.Methods(http.MethodGet).Path("/news/{id}").HandlerFunc(api.newsDetails)
 }
 
 func (api *API) newsList(w http.ResponseWriter, r *http.Request) {
