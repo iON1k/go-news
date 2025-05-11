@@ -12,5 +12,11 @@
 <description>Description2</description>
 <pubDate>Sat, 05 Apr 2025 09:24:09 GMT</pubDate>
 </item>
+<item>
+<title>Test3</title>
+<link>Link4</link>
+<description>Description4</description>
+<pubDate>WRONG DATE</pubDate>
+</item>
 </channel>
 </rss>

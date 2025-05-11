@@ -31,11 +31,27 @@ func (api *API) Router() *mux.Router {
 }
 
 func (api *API) endpoints() {
-	api.router.HandleFunc("/news", api.newsList).Methods(http.MethodGet)
+	api.router.HandleFunc("/news/latest", api.newsList).Methods(http.MethodGet)
+	api.router.HandleFunc("/news/filtered", api.newsFiltered).Methods(http.MethodGet)
 	api.router.HandleFunc("/news/{id}", api.newsDetails).Methods(http.MethodGet)
 }
 
 func (api *API) newsList(w http.ResponseWriter, r *http.Request) {
+	search := r.URL.Query().Get("s")
+
+	pageStr := r.URL.Query().Get("page")
+	page, _ := strconv.Atoi(pageStr)
+
+	new_page, err := api.store.NewsPage(search, 0, 0, page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(new_page)
+}
+
+func (api *API) newsFiltered(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Query().Get("title")
 
 	fromStr := r.URL.Query().Get("from")

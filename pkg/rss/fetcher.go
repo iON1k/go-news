@@ -5,6 +5,7 @@ import (
 	"log"
 	"news/pkg/models"
 	"news/pkg/storage"
+	"strings"
 	"time"
 
 	strip "github.com/grokify/html-strip-tags-go"
@@ -77,25 +78,32 @@ func fetchFeed(loader Loader) (Feed, error) {
 func parseFeed(feed Feed) []models.FullNews {
 	var result []models.FullNews
 	for _, item := range feed.Chanel.Items {
+		pub_t, err := parsePubTime(item.PubDate)
+		if err != nil {
+			continue
+		}
+
 		news := models.FullNews{
 			Title:   item.Title,
 			Content: strip.StripTags(item.Description),
 			Link:    item.Link,
-			PubTime: parsePubTime(item.PubDate),
+			PubTime: pub_t,
 		}
 		result = append(result, news)
 	}
 	return result
 }
 
-func parsePubTime(date string) int64 {
+func parsePubTime(date string) (int64, error) {
+	date = strings.ReplaceAll(date, ",", "")
 	result, err := time.Parse("Mon 2 Jan 2006 15:04:05 -0700", date)
 	if err != nil {
 		result, err = time.Parse("Mon 2 Jan 2006 15:04:05 GMT", date)
 	}
+
 	if err != nil {
-		return 0
+		return 0, err
 	}
 
-	return result.Unix()
+	return result.Unix(), nil
 }
