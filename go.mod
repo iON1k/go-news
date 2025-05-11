@@ -5,6 +5,7 @@ go 1.21
 toolchain go1.22.4
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/jackc/pgx/v5 v5.7.2

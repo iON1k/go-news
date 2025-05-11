@@ -53,6 +53,7 @@ func main() {
 
 	// Запускаем API
 	api := api.New(store)
-	log.Print("Starting server...")
+	log.Print("Server is starting...")
 	http.ListenAndServe(":8080", api.Router())
+	log.Print("Server has been stopped.")
 }
